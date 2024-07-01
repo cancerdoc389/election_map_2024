@@ -1,11 +1,10 @@
+# Load the libraries
 library(shiny)
 library(leaflet)
 library(sf)
 library(dplyr)
 library(ggplot2)
 library(ggiraph)
-library(ggpattern)
-
 
 # Load the .RData file. Contains constituency geometries as long/lat coordinates and hex, plus a column of some key Conservative candidates that might be at risk.
 load("constituencies.RData")
