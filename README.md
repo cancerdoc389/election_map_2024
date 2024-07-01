@@ -10,6 +10,7 @@ This interactive Shiny application can be used to manually visualise constituenc
 - **Select Winning Party:** Choose the winning party for the selected constituency from a dropdown list.
 - **Interactive Map:** Display constituencies coloured according to the winning party selected.
 - **Dynamic Bar Plot:** Shows the distribution of seats among different political parties, updating based on user selections.
+- **Highlight Key Constituencies:** Constituencies with notable Conservative candidates are highlighted with bold borders.
 
 ## Libraries Used
 
@@ -48,6 +49,7 @@ This interactive Shiny application can be used to manually visualise constituenc
 - Select a party from the dropdown to assign it as the winning party for the selected constituency.
 - Click the "Update" button to apply the selection.
 - Explore the interactive hexogram map and bar plot to analyse your election results.
+- Update the 'Candidate' column in order to highlight any constituencies of interest to you. By default, these are set to some of the prominent figures of the Conservative party, such as Rishi Sunak and Liz Truss.
 
 ## Contributing
 
