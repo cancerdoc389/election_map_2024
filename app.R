@@ -4,6 +4,8 @@ library(sf)
 library(dplyr)
 library(ggplot2)
 library(ggiraph)
+library(ggpattern)
+
 
 # Load the .RData file. Contains constituency geometries as long/lat coordinates and hex, plus a column of some key Conservative candidates that might be at risk.
 load("constituencies.RData")
@@ -139,12 +141,24 @@ server <- function(input, output, session) {
                                    rv$selections$party[match(constituencies$Name, rv$selections$constituency)],
                                    NA)
     
+    # Create a new column indicating if there's a candidate
+    constituencies$has_candidate <- ifelse(!is.na(constituencies$Candidate), TRUE, FALSE)
+    
     # Create ggplot with tooltips
     p <- ggplot(data = constituencies) +
-      geom_sf_interactive(aes(geometry = geometry, fill = party, 
-                              tooltip = ifelse(!is.na(Candidate), paste(Name, "(", Candidate, ")", sep = ""), Name)), 
-                          size = 0.2) +
-      scale_fill_manual(values = setNames(party_colors, party_names), na.value = "lightgrey") +
+      geom_sf_interactive(aes(geometry = geometry, 
+                              fill = ifelse(!is.na(party), party, "No Party"), 
+                              tooltip = paste(Name, ifelse(!is.na(Candidate), paste("(", Candidate, ")"), ""), sep = "")), 
+                          color = "black", linewidth = 0.1) +  # Base layer for all constituencies
+      
+      geom_sf_interactive(data = filter(constituencies, has_candidate == TRUE), 
+                          aes(geometry = geometry, 
+                              fill = ifelse(!is.na(party), party, "No Party"), 
+                              tooltip = paste(Name, " (", Candidate, ")", sep = "")), 
+                          color = "black", linewidth = 0.35) +  # Layer for constituencies with candidates
+      
+      scale_fill_manual(values = c(setNames(party_colors, party_names), "No Party" = "lightgrey"), na.value = "lightgrey") +
+      
       theme_void() +  
       theme(plot.background = element_rect(fill = "#cbebff", color = NA),  
             legend.position = "none"
@@ -161,6 +175,9 @@ server <- function(input, output, session) {
     
     girafe_obj  # Return the girafe object
   })
+  
+  
+  
   
   # Render the bar plot
   output$barplot <- renderPlot({
