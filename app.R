@@ -5,6 +5,8 @@ library(sf)
 library(dplyr)
 library(ggplot2)
 library(ggiraph)
+library(DT)
+library(forcats)  # Load the forcats package for factor manipulation
 
 # Load the .RData file. Contains constituency geometries as long/lat coordinates and hex, plus a column of some key Conservative candidates that might be at risk.
 load("constituencies.RData")
@@ -35,7 +37,6 @@ sorted_constituencies <- sort(unique(constituencies$Name))
 
 # Define UI
 ui <- fluidPage(
-  # Search input row with selectizeInput and update button
   fluidRow(
     align = "center",  
     column(width = 12,
@@ -43,7 +44,6 @@ ui <- fluidPage(
            tags$h2(style = "font-weight: bold;", "General Election Map, 2024")
     )
   ),
-  # Row for the search options.
   fluidRow(
     align = "center",  
     column(width = 5,
@@ -73,24 +73,25 @@ ui <- fluidPage(
            actionButton("update", "Update", style = "width: 100%; margin-top: 25px;")  
     )
   ),
-  # Row for the hexogram
+  fluidRow(
+    align = "center",
+    column(width = 6,  # Adjust column widths as needed
+           align = "center",
+           girafeOutput("hexogram", width = "100%", height = "100%")
+    ),
+    column(width = 6,  # Adjust column widths as needed
+           align = "center",
+           plotOutput("barplot", width = "100%", height = "1000px")  # Adjust height as needed
+    )
+  ),
+  
+  tags$hr(style = "margin-top: 10px; margin-bottom: 10px;"),
+  
   fluidRow(
     align = "center",
     column(width = 12,
            align = "center",
-           girafeOutput("hexogram", width = "100%", height = "700px")
-    )
-  ),
-  
-  # Add some spacing between rows
-  tags$hr(style = "margin-top: 10px; margin-bottom: 10px;"),
-  
-  # Row for the bar plot
-  fluidRow(
-    align = "center",  
-    column(width = 12,
-           align = "center",  
-           plotOutput("barplot", width = "100%", height = "420px")
+           dataTableOutput("results_table")
     )
   )
 )
@@ -148,18 +149,19 @@ server <- function(input, output, session) {
       geom_sf_interactive(aes(geometry = geometry, 
                               fill = ifelse(!is.na(party), party, "No Party"), 
                               tooltip = paste(Name, ifelse(!is.na(Candidate), paste("(", Candidate, ")"), ""), sep = "")), 
-                          color = "black", linewidth = 0.1) +  # Base layer for all constituencies
+                          color = "white", linewidth = 0.1) +  # Base layer for all constituencies
       
       geom_sf_interactive(data = filter(constituencies, has_candidate == TRUE), 
                           aes(geometry = geometry, 
                               fill = ifelse(!is.na(party), party, "No Party"), 
-                              tooltip = paste(Name, " (", Candidate, ")", sep = "")), 
-                          color = "black", linewidth = 0.35) +  # Layer for constituencies with candidates
+                              tooltip = paste(Name, " (", Candidate, ")", sep = ""),
+                              color = I(border_colour)),  # Use the border_colour column
+                          linewidth = 0.35) +  # Layer for constituencies with candidates
       
       scale_fill_manual(values = c(setNames(party_colors, party_names), "No Party" = "lightgrey"), na.value = "lightgrey") +
       
       theme_void() +  
-      theme(plot.background = element_rect(fill = "#cbebff", color = NA),  
+      theme(plot.background = element_rect(fill = "white", color = NA),  
             legend.position = "none"
       )
     
@@ -175,9 +177,6 @@ server <- function(input, output, session) {
     girafe_obj  # Return the girafe object
   })
   
-  
-  
-  
   # Render the bar plot
   output$barplot <- renderPlot({
     # Calculate party counts
@@ -187,17 +186,36 @@ server <- function(input, output, session) {
     party_counts_df$party <- factor(party_counts_df$party, levels = rev(party_names))  
     
     # Plot the bar plot
-    ggplot(party_counts_df, aes(x = count, y = party, fill = party)) +
-      geom_bar(stat = "identity", show.legend = FALSE) +  
+    ggplot(party_counts_df, aes(x = fct_rev(fct_infreq(party)), y = count, fill = party)) +
+      geom_bar(stat = "identity") +  
       scale_fill_manual(values = setNames(party_colors, party_names)) +  
-      labs(x = "Seats", y = NULL, title = NULL) +
-      xlim(0, 650) +
-      geom_vline(xintercept = 326, linetype = "dashed", color = "red") +
-      annotate("text", x = 326, y = length(party_names) , label = paste("\u2190", " Seats required for a majority"), vjust = -0.5, hjust = -0.05) +
+      labs(x = NULL, y = "Seats") +  
+      ylim(0, 600) +  # Adjust y-axis limits
+      geom_hline(yintercept = 326, linetype = "dashed", color = "red") +
+      annotate("text", x = length(party_names) / 2, y = 326 + 20, 
+               label = "Seats required for a majority", 
+               hjust = 0, vjust = 1.5, size = 5, fontface = "bold") +  # Adjust position, size, and font
       theme_minimal() +
-      theme(axis.text.y = element_text(color = "black", size = 12),  
-            plot.title = element_text(size = 18, face = "bold", hjust = 0.5))  
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14),  # Adjust axis text size
+            axis.title.y = element_text(size = 16, face = "bold"),  # Adjust y-axis title size and bold
+            plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+            legend.position = "bottom",  # Move legend to bottom
+            legend.title = element_blank(),  # Remove legend title
+            legend.spacing.x = unit(0.2, 'cm'),  # Adjust spacing between legend items
+            legend.text = element_text(size = 12),  # Adjust legend text size
+            legend.box.just = "left",  # Align legend items to the left
+            legend.box = "horizontal",  # Arrange legend items horizontally
+            legend.key.width = unit(2, 'cm'),  # Adjust width of legend keys
+            panel.grid.major.y = element_line(color = "gray", size = 0.5),  # Adjust major grid lines
+            panel.grid.minor.y = element_blank(),  # Remove minor grid lines
+            axis.ticks.y = element_blank(),  # Remove y-axis ticks
+            axis.text.y = element_text(size = 14),  # Adjust y-axis text size
+            axis.line.y = element_line(size = 0.5),  # Adjust y-axis line size
+            panel.background = element_blank(),  # Remove panel background
+            panel.border = element_rect(color = "black", fill = NA, size = 0.5)) +  # Adjust panel border
+      guides(fill = guide_legend(reverse = TRUE))  # Reverse legend order
   })
+  
 }
 
 # Run the app
