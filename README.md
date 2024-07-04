@@ -10,7 +10,7 @@ This interactive R Shiny application can be used to manually visualise constitue
 - **Select Winning Party:** Choose the winning party for the selected constituency from a dropdown list.
 - **Interactive Map:** Display constituencies coloured according to the winning party selected.
 - **Dynamic Bar Plot:** Shows the distribution of seats among different political parties, updating based on user selections.
-- **Highlight Key Constituencies:** Constituencies with notable Conservative candidates are highlighted with bold borders.
+- **Highlight Key Constituencies:** Constituencies with notable candidates are highlighted.
 
 ## Libraries Used
 
