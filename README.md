@@ -2,7 +2,7 @@
 
 ## Description
 
-This interactive Shiny application can be used to manually visualise constituency election result data for the 2024 General Election using geographical maps and bar plots.
+This interactive R Shiny application can be used to manually visualise constituency election result data for the 2024 General Election using geographical maps and bar plots.
 
 ## Features
 
