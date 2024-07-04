@@ -149,14 +149,14 @@ server <- function(input, output, session) {
       geom_sf_interactive(aes(geometry = geometry, 
                               fill = ifelse(!is.na(party), party, "No Party"), 
                               tooltip = paste(Name, ifelse(!is.na(Candidate), paste("(", Candidate, ")"), ""), sep = "")), 
-                          color = "white", linewidth = 0.1) +  # Base layer for all constituencies
+                          color = "white", linewidth = 0.25) +  # Base layer for all constituencies
       
       geom_sf_interactive(data = filter(constituencies, has_candidate == TRUE), 
                           aes(geometry = geometry, 
                               fill = ifelse(!is.na(party), party, "No Party"), 
                               tooltip = paste(Name, " (", Candidate, ")", sep = ""),
                               color = I(border_colour)),  # Use the border_colour column
-                          linewidth = 0.35) +  # Layer for constituencies with candidates
+                          linewidth = 0.25) +  # Layer for constituencies with candidates
       
       scale_fill_manual(values = c(setNames(party_colors, party_names), "No Party" = "lightgrey"), na.value = "lightgrey") +
       
